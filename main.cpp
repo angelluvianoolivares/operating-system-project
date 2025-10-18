@@ -32,7 +32,7 @@ int main()
         cout << "  Initial State: " << stateToString(p1.getState()) << endl; // Should be NEW (0)
         cout << "  Initial Remaining Time: " << p1.getRemainingTime() << endl; // Should be 5
 
-        // 2. Demonstratng updating the process state
+        // 2. Demonstrating updating the process state
         cout << "\nChanging state from NEW to READY..." << endl;
         p1.setState(STATE_READY);
         cout << "  Current State: " << stateToString(p1.getState()) << endl; // Should be READY (1)
@@ -41,7 +41,7 @@ int main()
         p1.setState(STATE_RUNNING);
         cout << "  Current State: " << stateToString(p1.getState()) << endl; // Should be RUNNING (2)
 
-        // 3. Demonstrate decrementing execution time
+        // 3. Demonstrates the decrementing execution time
         cout << "\nSimulating run for 3 time units..." << endl;
         p1.runFor(3);
         cout << "  Remaining Time: " << p1.getRemainingTime() << endl; // Should be 2
@@ -52,7 +52,7 @@ int main()
         cout << "  Remaining Time: " << p1.getRemainingTime() << endl; // Should be 0
         cout << "  Is process finished? " << (p1.isFinished() ? "Yes" : "No") << endl;
 
-        // 4. Demonstrate final state change
+        // 4. Demonstrates final state change
         cout << "\nSetting state to TERMINATED..." << endl;
         p1.setState(STATE_TERMINATED);
         cout << "  Final State: " << stateToString(p1.getState()) << endl; // Should be TERMINATED (4)

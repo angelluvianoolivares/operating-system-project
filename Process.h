@@ -3,7 +3,7 @@
 
 using namespace std;  
 
-// Define integer constants for the process states [cite: 1773-1776]
+// Using integers to define the states Ex. Ready = 1
 #define STATE_NEW         0
 #define STATE_READY       1
 #define STATE_RUNNING     2

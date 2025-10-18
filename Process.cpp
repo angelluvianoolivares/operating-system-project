@@ -1,5 +1,7 @@
 #include "Process.h"
 
+using namespace std;
+
 // 1. Constructor implementation 
 Process::Process(int p_pid, int p_arrival_time, int p_burst_time) {
     pid = p_pid;
@@ -33,7 +35,7 @@ bool Process::isFinished() const { return (remaining_time == 0); }
 
 //-Helper function implementation-
 
-std::string stateToString(int state) {
+string stateToString(int state) {
     switch (state) {
     case STATE_NEW: return "NEW";
     case STATE_READY: return "READY";
