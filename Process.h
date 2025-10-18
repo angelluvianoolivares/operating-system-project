@@ -1,7 +1,9 @@
 #pragma once
 #include <string>
 
-[cite_start]// Define integer constants for the process states [cite: 1773-1776]
+using namespace std;  
+
+// Define integer constants for the process states [cite: 1773-1776]
 #define STATE_NEW         0
 #define STATE_READY       1
 #define STATE_RUNNING     2
@@ -11,7 +13,7 @@
 class Process {
 
 private:
-    // --- Core Attributes ---
+    //-Core Attributes-
     int pid;
     int arrival_time;
     int burst_time;
@@ -19,9 +21,9 @@ private:
     int remaining_time;
 
 public:
-    // --- Methods ---
+    //-Methods-
     
-    // 1. Constructor with new, clearer parameter names
+    // 1. Constructor with parameters
     Process(int p_pid, int p_arrival_time, int p_burst_time);
 
     // 2. A method to update process state
@@ -30,7 +32,7 @@ public:
     // 3. A method to decrement remaining execution time
     void runFor(int time);
 
-    // --- 4. Getters ---
+    //-4. Getters-
     int getPid() const;
     int getArrivalTime() const;
     int getState() const;
@@ -39,4 +41,4 @@ public:
 };
 
 // Helper function declaration for printing states
-std::string stateToString(int state);
+string stateToString(int state);
