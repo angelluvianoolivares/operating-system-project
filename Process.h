@@ -19,6 +19,10 @@ private:
     int burst_time;
     int state;
     int remaining_time;
+    // -Additional Attributes- (3)
+    int completion_time;
+    int turnaround_time;
+    int waiting_time;
 
 public:
     //-Methods-
@@ -38,6 +42,11 @@ public:
     int getState() const;
     int getRemainingTime() const;
     bool isFinished() const;
+    int getBurstTime() const; //(3)
+
+    void setCompletionTime(int time); //(3)
+    void setTurnaroundTime(int time); //(3)
+    void setWaitingTime(int time); //(3)
 };
 
 // Helper function declaration for printing states
