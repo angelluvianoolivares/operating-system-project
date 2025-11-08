@@ -32,7 +32,7 @@ void Scheduler::runFCFS() {
             currentTime = processes[i].getArrivalTime();
         }
 
-        //-Set states- (this is part of our past class logic)
+        //-Set states- (from our past attemp)
         processes[i].setState(STATE_RUNNING);
 
         //-Process runs-

@@ -21,7 +21,7 @@ private:
     //-A list to hold all the processes for the simulation-
     std::vector<Process> processes;
 
-    //-To keep track of simulation time-
+    //-To keep track of simulation time we use a clock-
     int currentTime;
 
     //-A helper method to print the results table-

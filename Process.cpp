@@ -34,11 +34,14 @@ void Process::runFor(int time) {
 //-Getter implementations-
 int Process::getPid() const { return pid; }
 int Process::getArrivalTime() const { return arrival_time; }
+int Process::getBurstTime() const { return burst_time; } //(3)
 int Process::getState() const { return state; }
 int Process::getRemainingTime() const { return remaining_time; }
+int Process::getTurnaroundTime() const { return turnaround_time; }  //(3) 
+int Process::getWaitingTime() const { return waiting_time; }  //(3)
+int Process::getCompletionTime() const { return completion_time; }  //(3)
 bool Process::isFinished() const { return (remaining_time == 0); }
 
-int Process::getBurstTime() const { return burst_time; } //(3)
 
 //-NEW Setter implementations- (3)
 void Process::setCompletionTime(int time) { completion_time = time; }

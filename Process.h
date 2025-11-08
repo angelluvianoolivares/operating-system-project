@@ -37,16 +37,21 @@ public:
     void runFor(int time);
 
     //-4. Getters-
+
     int getPid() const;
     int getArrivalTime() const;
     int getState() const;
     int getRemainingTime() const;
-    bool isFinished() const;
     int getBurstTime() const; //(3)
+    int getTurnaroundTime() const;  //(3)
+    int getWaitingTime() const; //(3)
+    int getCompletionTime() const; //(3)
+    bool isFinished() const;
 
-    void setCompletionTime(int time); //(3)
-    void setTurnaroundTime(int time); //(3)
-    void setWaitingTime(int time); //(3)
+    //-5. Setters for new attributes- (3)
+    void setCompletionTime(int time); 
+    void setTurnaroundTime(int time); 
+    void setWaitingTime(int time); 
 };
 
 // Helper function declaration for printing states
