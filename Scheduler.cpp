@@ -5,7 +5,7 @@ Scheduler::Scheduler() {}
 
 
 //-This method contains the FCFS simulation logic-
-// Updated to work on the "processes" copy it was given (4)
+// Updated to work on the "processes" copy it was given (3)
 void Scheduler::runFCFS(std::vector<Process> processes) {
 
     // 1. Sorts the processes by arrival time.
@@ -42,8 +42,7 @@ void Scheduler::runFCFS(std::vector<Process> processes) {
     printResults(processes, "First-Come, First-Served (FCFS)");
 }
 
-// -NEW METHOD- (4)
-// This logic is adapted from your teammate's 'SJF_NonPreemptive' function
+//-This method contains the SJF simulation logic (3)
 void Scheduler::runSJF(std::vector<Process> processes) {
     int n = processes.size();
     int currentTime = 0;
@@ -93,6 +92,61 @@ void Scheduler::runSJF(std::vector<Process> processes) {
     printResults(processes, "Shortest Job First (SJF) Non-Preemptive");
 }
 
+//-This method contains the SRTF (Preemptive) simulation logic (3)
+void Scheduler::runSRTF(std::vector<Process> processes) {
+    int n = processes.size();
+    int currentTime = 0;
+    int completed = 0;
+
+    // 1. Loops until everyone is finished
+    while (completed != n) {
+        int shortest_remaining = 99999;
+        int shortest_index = -1;
+
+        // 2. Checks ALL processes to find the one with the shortest remaining time
+        // that has arrived and is not yet finished.
+        for (int i = 0; i < n; i++) {
+            if (processes[i].getArrivalTime() <= currentTime && !processes[i].isFinished()) {
+
+                // -Found a process with shorter remaining time?-
+                if (processes[i].getRemainingTime() < shortest_remaining) {
+                    shortest_remaining = processes[i].getRemainingTime();
+                    shortest_index = i;
+                }
+
+                // -Tie-Breaker: If remaining times are equal, picks the one that arrived first-
+                if (processes[i].getRemainingTime() == shortest_remaining) {
+                    if (processes[i].getArrivalTime() < processes[shortest_index].getArrivalTime()) {
+                        shortest_index = i;
+                    }
+                }
+            }
+        }
+
+        if (shortest_index == -1) {
+            //-No process is ready to run (CPU idle)-
+            currentTime++;
+        }
+        else {
+            // 3. Runs the chosen process for just ONE time unit
+            Process& p = processes[shortest_index];
+
+            p.setState(STATE_RUNNING);
+            p.runFor(1);
+            currentTime++;
+
+            // 4. If it finished during that last tick, records it
+            if (p.isFinished()) {
+                p.setCompletionTime(currentTime);
+                p.setState(STATE_TERMINATED);
+                completed++;
+            }
+        }
+    }
+
+    printResults(processes, "Shortest Remaining Time First (SRTF)");
+}
+
 //-This method will calculates and prints the final statistics table-
 // Updated to accept the list of processes and a title (4)
 void Scheduler::printResults(std::vector<Process>& processes, std::string algorithmName) {
@@ -107,25 +161,25 @@ void Scheduler::printResults(std::vector<Process>& processes, std::string algori
         return a.getPid() < b.getPid();
     });
 
-    // 1. Print the table header (Make a table since more organized than a list format would look.)
+    // 1. Prints the table header (Make a table since more organized than a list format would look.)
     std::cout << "| PID | Arrival | Burst | Complete | Turnaround | Waiting |\n";
 
 
     // 2. Calculaes stats for each process and print its row
     for (int i = 0; i < processes.size(); i++) {
-        //-Calculate stats-
+        //-Calculates stats-
         int tat = processes[i].getCompletionTime() - processes[i].getArrivalTime();
         int wt = tat - processes[i].getBurstTime();
 
-        //-Store them back into the process object-
+        //-Stores them back into the process object-
         processes[i].setTurnaroundTime(tat);
         processes[i].setWaitingTime(wt);
 
-        //-Add to totals-
+        //-Adds to totals-
         total_turnaround_time += tat;
         total_waiting_time += wt;
 
-        //-Print the row-
+        //-Prints the row-
         std::cout << "| " << std::setw(3) << processes[i].getPid()
             << " | " << std::setw(7) << processes[i].getArrivalTime()
             << " | " << std::setw(5) << processes[i].getBurstTime()
@@ -134,7 +188,7 @@ void Scheduler::printResults(std::vector<Process>& processes, std::string algori
             << " | " << std::setw(7) << processes[i].getWaitingTime() << " |\n";
     }
 
-    // 3. Calculate and print the averages
+    // 3. Calculates and print the averages
     double avg_tat = (double)total_turnaround_time / processes.size();
     double avg_wt = (double)total_waiting_time / processes.size();
 
