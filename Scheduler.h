@@ -5,7 +5,8 @@
 #include <iomanip>      // For formatting the output table
 #include <algorithm>    // For sorting the processes
 #include "Process.h"    // Our 'Process' class
-#include <string>       // Added this for string (3)
+#include "MMU.h"        // <-- NEW: Include MMU (3)
+#include <string>       
 
 class Scheduler {
 public:
@@ -19,9 +20,11 @@ public:
     void runSJF(std::vector<Process> processes);
 
     //-Runs the SRTF simulation on a given list of processes- (3)
-    void runSRTF(std::vector<Process> processes); 
+    void runSRTF(std::vector<Process> processes);
 
 private:
+    //-The Memory Management Unit- (NEW)
+    MMU mmu;
 
     //-A helper method to print the list and tittle-
     void printResults(std::vector<Process>& processes, std::string algorithmName);
