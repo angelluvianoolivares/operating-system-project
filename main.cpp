@@ -49,6 +49,7 @@ int main()
         // 4. Run the Algorithms and print results
         myScheduler.runFCFS(myProcesses);
         myScheduler.runSJF(myProcesses);
+        myScheduler.runSRTF(myProcesses);
         cout << "===================================" << endl;
     }
 
