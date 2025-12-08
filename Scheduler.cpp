@@ -1,19 +1,12 @@
 #include "Scheduler.h"
 
 //-Constructor-
-Scheduler::Scheduler() {
-    currentTime = 0;
-}
+Scheduler::Scheduler() {}
 
-//-Method to add a process to the internal list
-void Scheduler::addProcess(Process p) {
-    processes.push_back(p);
-}
 
 //-This method contains the FCFS simulation logic-
-void Scheduler::runFCFS() {
-    std::cout << "--- First-Come, First-Served (FCFS) ---" << std::endl;
-
+// Updated to work on the "processes" copy it was given (4)
+void Scheduler::runFCFS(std::vector<Process> processes) {
 
     // 1. Sorts the processes by arrival time.
     std::sort(processes.begin(), processes.end(), [](const Process& a, const Process& b) {
@@ -24,7 +17,7 @@ void Scheduler::runFCFS() {
     });
 
     // 2. Runs the simulation
-    currentTime = 0;
+    int currentTime = 0;
     for (int i = 0; i < processes.size(); i++) {
 
         //-Handle idle time- (if CPU is waiting for a process to arrive)
@@ -46,13 +39,73 @@ void Scheduler::runFCFS() {
     }
 
     // 3. Prints the results
-    printResults();
+    printResults(processes, "First-Come, First-Served (FCFS)");
+}
+
+// -NEW METHOD- (4)
+// This logic is adapted from your teammate's 'SJF_NonPreemptive' function
+void Scheduler::runSJF(std::vector<Process> processes) {
+    int n = processes.size();
+    int currentTime = 0;
+    int completed = 0;
+
+    // This 'isCompleted' vector is a great way to track finished processes
+    std::vector<bool> isCompleted(n, false);
+
+    while (completed != n) {
+        int shortest_burst = 99999; // A big number
+        int shortest_index = -1;
+
+        // Find the shortest job that has arrived and is not yet completed
+        for (int i = 0; i < n; i++) {
+            if (processes[i].getArrivalTime() <= currentTime && !isCompleted[i]) {
+                if (processes[i].getBurstTime() < shortest_burst) {
+                    shortest_burst = processes[i].getBurstTime();
+                    shortest_index = i;
+                }
+                // Tie-breaking (by arrival time), just like your teammate's code
+                if (processes[i].getBurstTime() == shortest_burst) {
+                    if (processes[i].getArrivalTime() < processes[shortest_index].getArrivalTime()) {
+                        shortest_index = i;
+                    }
+                }
+            }
+        }
+
+        if (shortest_index == -1) {
+            // No process is ready, so just move time forward
+            currentTime++;
+        }
+        else {
+            // A process is ready to run
+            Process& p = processes[shortest_index];
+
+            // Run the process to completion
+            currentTime += p.getBurstTime();
+            p.setCompletionTime(currentTime);
+            p.setState(STATE_TERMINATED);
+            isCompleted[shortest_index] = true;
+            completed++;
+        }
+    }
+
+    // Print the results
+    printResults(processes, "Shortest Job First (SJF) Non-Preemptive");
 }
 
 //-This method will calculates and prints the final statistics table-
-void Scheduler::printResults() {
+// Updated to accept the list of processes and a title (4)
+void Scheduler::printResults(std::vector<Process>& processes, std::string algorithmName) {
+    std::cout << "\n--- " << algorithmName << " ---" << std::endl;
+
     int total_turnaround_time = 0;
     int total_waiting_time = 0;
+
+
+    // Sort by PID for a clean, final report
+    std::sort(processes.begin(), processes.end(), [](const Process& a, const Process& b) {
+        return a.getPid() < b.getPid();
+    });
 
     // 1. Print the table header (Make a table since more organized than a list format would look.)
     std::cout << "| PID | Arrival | Burst | Complete | Turnaround | Waiting |\n";
