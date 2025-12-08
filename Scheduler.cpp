@@ -1,4 +1,5 @@
 #include "Scheduler.h"
+#include <cstdlib> // For random address generation
 
 //-Constructor-
 Scheduler::Scheduler() {}
@@ -74,6 +75,24 @@ void Scheduler::runFCFS(std::vector<Process> processes) {
             // Run CPU for 1 tick
             bool burstFinished = cpuProcess->runFor(1);
 
+            // --- VIRTUAL MEMORY SIMULATION (NEW) ---
+            // Randomly simulate a memory instruction (approx 25% of the time)
+            if (rand() % 4 == 0) {
+                int virtualAddr = rand() % (1024 * 1024); // Random 0 to 1MB
+                int physicalAddr = mmu.translate(virtualAddr);
+                
+                if (physicalAddr != -1) {
+                     std::cout << "[MMU] Process " << cpuProcess->getPid() << ": " 
+                               << "Virt: " << virtualAddr << " -> Phys: " << physicalAddr << std::endl;
+                } else {
+                     // Simulate Page Fault Handling
+                     // std::cout << "[MMU] Page Fault! Mapping page..." << std::endl;
+                     int vpn = virtualAddr >> 12; // 12 is OFFSET_BITS
+                     mmu.mapPage(vpn);
+                }
+            }
+            // ---------------------------------------
+
             if (burstFinished) {
                 cpuProcess->moveToNextBurst();
 
@@ -139,6 +158,18 @@ void Scheduler::runSJF(std::vector<Process> processes) {
         //-Handle CPU Execution-
         if (cpuProcess != nullptr) {
             bool burstFinished = cpuProcess->runFor(1);
+
+            // --- VIRTUAL MEMORY SIMULATION (NEW) ---
+            if (rand() % 4 == 0) {
+                int virtualAddr = rand() % (1024 * 1024); 
+                int physicalAddr = mmu.translate(virtualAddr);
+                
+                if (physicalAddr == -1) {
+                     int vpn = virtualAddr >> 12;
+                     mmu.mapPage(vpn);
+                }
+            }
+            // ---------------------------------------
 
             if (burstFinished) {
                 cpuProcess->moveToNextBurst();
@@ -232,6 +263,18 @@ void Scheduler::runSRTF(std::vector<Process> processes) {
         //-Handle CPU Execution-
         if (cpuProcess != nullptr) {
             bool burstFinished = cpuProcess->runFor(1);
+
+            // --- VIRTUAL MEMORY SIMULATION (NEW) ---
+            if (rand() % 4 == 0) {
+                int virtualAddr = rand() % (1024 * 1024); 
+                int physicalAddr = mmu.translate(virtualAddr);
+                
+                if (physicalAddr == -1) {
+                     int vpn = virtualAddr >> 12;
+                     mmu.mapPage(vpn);
+                }
+            }
+            // ---------------------------------------
 
             if (burstFinished) {
                 cpuProcess->moveToNextBurst();
