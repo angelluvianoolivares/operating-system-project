@@ -25,4 +25,8 @@ private:
 
     //-A helper method to print the list and tittle-
     void printResults(std::vector<Process>& processes, std::string algorithmName);
+
+    //-A helper to handle I/O bursts for all algorithms-
+    // It takes pointers so we can modify the original processes (3)
+    void handleWaitingQueue(std::vector<Process*>& waitingQueue, std::vector<Process*>& readyQueue);
 };
