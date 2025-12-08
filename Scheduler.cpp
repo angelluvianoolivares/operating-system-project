@@ -4,195 +4,320 @@
 Scheduler::Scheduler() {}
 
 
-//-This method contains the FCFS simulation logic-
-// Updated to work on the "processes" copy it was given (3)
-void Scheduler::runFCFS(std::vector<Process> processes) {
+//-Helper: Handles the Waiting Queue (I/O)-
+// This method iterates through processes in the waiting queue and runs their I/O bursts (3)
+void Scheduler::handleWaitingQueue(std::vector<Process*>& waitingQueue, std::vector<Process*>& readyQueue) {
 
-    // 1. Sorts the processes by arrival time.
-    std::sort(processes.begin(), processes.end(), [](const Process& a, const Process& b) {
-        if (a.getArrivalTime() != b.getArrivalTime()) {
-            return a.getArrivalTime() < b.getArrivalTime();
+    // 1. Goes through every process in the waiting queue
+    for (int i = 0; i < waitingQueue.size(); i++) {
+        Process* p = waitingQueue[i];
+
+        // 2. Runs I/O for 1 tick
+        // runFor returns TRUE if the burst finished
+        bool burstFinished = p->runFor(1);
+
+        if (burstFinished) {
+            p->moveToNextBurst();
+
+            // 3. Checks if process is fully finished or just the I/O burst
+            if (p->isFinished()) {
+                p->setState(STATE_TERMINATED);
+                // Removes from waiting queue
+                waitingQueue.erase(waitingQueue.begin() + i);
+                i--; // Adjusts index since we removed an element
+            }
+            else {
+                // I/O done, moves back to Ready Queue for next CPU burst
+                p->setState(STATE_READY);
+                readyQueue.push_back(p);
+                // Removes from waiting queue
+                waitingQueue.erase(waitingQueue.begin() + i);
+                i--; // Adjust index
+            }
         }
-        return a.getPid() < b.getPid(); 
+    }
+}
+
+
+//-This method contains the FCFS simulation logic-
+// Updated to support I/O concurrency and Waiting Queues (3)
+void Scheduler::runFCFS(std::vector<Process> processes) {
+    int currentTime = 0;
+    int completed = 0;
+
+    //-Queues use pointers to the main 'processes' vector-
+    std::vector<Process*> readyQueue;
+    std::vector<Process*> waitingQueue;
+    Process* cpuProcess = nullptr; // The process currently on CPU
+
+    // 1. Sorts the processes by arrival time initially
+    std::sort(processes.begin(), processes.end(), [](const Process& a, const Process& b) {
+        return a.getArrivalTime() < b.getArrivalTime();
     });
 
-    // 2. Runs the simulation
-    int currentTime = 0;
-    for (int i = 0; i < processes.size(); i++) {
+    // 2. Main Simulation Loop (Tick-by-Tick)
+    while (completed != processes.size()) {
 
-        //-Handle idle time- (if CPU is waiting for a process to arrive)
-        if (currentTime < processes[i].getArrivalTime()) {
-            currentTime = processes[i].getArrivalTime();
+        //-Check for new arrivals-
+        for (int i = 0; i < processes.size(); i++) {
+            if (processes[i].getArrivalTime() == currentTime) {
+                processes[i].setState(STATE_READY);
+                readyQueue.push_back(&processes[i]);
+            }
         }
 
-        //-Set states- (from our past attemp)
-        processes[i].setState(STATE_RUNNING);
+        //-Handle I/O (Waiting Queue)-
+        handleWaitingQueue(waitingQueue, readyQueue);
 
-        //-Process runs-
-        currentTime += processes[i].getBurstTime();
+        //-Handle CPU Execution-
+        if (cpuProcess != nullptr) {
+            // Run CPU for 1 tick
+            bool burstFinished = cpuProcess->runFor(1);
 
-        //-Set completion time-
-        processes[i].setCompletionTime(currentTime);
+            if (burstFinished) {
+                cpuProcess->moveToNextBurst();
 
-        //-Set final state-
-        processes[i].setState(STATE_TERMINATED);
+                if (cpuProcess->isFinished()) {
+                    cpuProcess->setCompletionTime(currentTime);
+                    cpuProcess->setState(STATE_TERMINATED);
+                    completed++;
+                    cpuProcess = nullptr; // CPU is free
+                }
+                else {
+                    // Burst done, but process not finished -> Must be I/O next
+                    cpuProcess->setState(STATE_WAITING);
+                    waitingQueue.push_back(cpuProcess);
+                    cpuProcess = nullptr; // CPU is free
+                }
+            }
+        }
+
+        //-Scheduler Decision (FCFS)-
+        // If CPU is free, pick next process from Ready Queue
+        if (cpuProcess == nullptr && !readyQueue.empty()) {
+            cpuProcess = readyQueue.front(); // Pick first in line
+            readyQueue.erase(readyQueue.begin()); // Remove from line
+            cpuProcess->setState(STATE_RUNNING);
+        }
+
+        currentTime++;
     }
 
-    // 3. Prints the results
     printResults(processes, "First-Come, First-Served (FCFS)");
 }
 
-//-This method contains the SJF simulation logic (3)
+
+//-This method contains the SJF simulation logic-
+// Updated to support I/O concurrency (3)
 void Scheduler::runSJF(std::vector<Process> processes) {
-    int n = processes.size();
     int currentTime = 0;
     int completed = 0;
 
-    // This 'isCompleted' vector is a great way to track finished processes
-    std::vector<bool> isCompleted(n, false);
+    std::vector<Process*> readyQueue;
+    std::vector<Process*> waitingQueue;
+    Process* cpuProcess = nullptr;
 
-    while (completed != n) {
-        int shortest_burst = 99999; // A big number
-        int shortest_index = -1;
+    // 1. Sorts by arrival time initially
+    std::sort(processes.begin(), processes.end(), [](const Process& a, const Process& b) {
+        return a.getArrivalTime() < b.getArrivalTime();
+    });
 
-        // Find the shortest job that has arrived and is not yet completed
-        for (int i = 0; i < n; i++) {
-            if (processes[i].getArrivalTime() <= currentTime && !isCompleted[i]) {
-                if (processes[i].getBurstTime() < shortest_burst) {
-                    shortest_burst = processes[i].getBurstTime();
-                    shortest_index = i;
+    // 2. Main Simulation Loop
+    while (completed != processes.size()) {
+
+        //-Check for new arrivals-
+        for (int i = 0; i < processes.size(); i++) {
+            if (processes[i].getArrivalTime() == currentTime) {
+                processes[i].setState(STATE_READY);
+                readyQueue.push_back(&processes[i]);
+            }
+        }
+
+        //-Handle I/O (Waiting Queue)-
+        handleWaitingQueue(waitingQueue, readyQueue);
+
+        //-Handle CPU Execution-
+        if (cpuProcess != nullptr) {
+            bool burstFinished = cpuProcess->runFor(1);
+
+            if (burstFinished) {
+                cpuProcess->moveToNextBurst();
+
+                if (cpuProcess->isFinished()) {
+                    cpuProcess->setCompletionTime(currentTime);
+                    cpuProcess->setState(STATE_TERMINATED);
+                    completed++;
+                    cpuProcess = nullptr;
                 }
-                // Tie-breaking (by arrival time), just like your teammate's code
-                if (processes[i].getBurstTime() == shortest_burst) {
-                    if (processes[i].getArrivalTime() < processes[shortest_index].getArrivalTime()) {
-                        shortest_index = i;
-                    }
+                else {
+                    cpuProcess->setState(STATE_WAITING);
+                    waitingQueue.push_back(cpuProcess);
+                    cpuProcess = nullptr;
                 }
             }
         }
 
-        if (shortest_index == -1) {
-            // No process is ready, so just move time forward
-            currentTime++;
-        }
-        else {
-            // A process is ready to run
-            Process& p = processes[shortest_index];
+        //-Scheduler Decision (SJF)-
+        // If CPU is free, find process with shortest CURRENT burst
+        if (cpuProcess == nullptr && !readyQueue.empty()) {
+            int shortestIndex = -1;
+            int shortestBurst = 99999;
 
-            // Run the process to completion
-            currentTime += p.getBurstTime();
-            p.setCompletionTime(currentTime);
-            p.setState(STATE_TERMINATED);
-            isCompleted[shortest_index] = true;
-            completed++;
+            for (int i = 0; i < readyQueue.size(); i++) {
+                if (readyQueue[i]->getCurrentBurstDuration() < shortestBurst) {
+                    shortestBurst = readyQueue[i]->getCurrentBurstDuration();
+                    shortestIndex = i;
+                }
+            }
+
+            cpuProcess = readyQueue[shortestIndex];
+            readyQueue.erase(readyQueue.begin() + shortestIndex);
+            cpuProcess->setState(STATE_RUNNING);
         }
+
+        currentTime++;
     }
 
-    // Print the results
-    printResults(processes, "Shortest Job First (SJF) Non-Preemptive");
+    printResults(processes, "Shortest Job First (SJF)");
 }
 
-//-This method contains the SRTF (Preemptive) simulation logic (3)
+
+//-This method contains the SRTF simulation logic-
+// Updated to support I/O concurrency and Preemption (3)
 void Scheduler::runSRTF(std::vector<Process> processes) {
-    int n = processes.size();
     int currentTime = 0;
     int completed = 0;
 
-    // 1. Loops until everyone is finished
-    while (completed != n) {
-        int shortest_remaining = 99999;
-        int shortest_index = -1;
+    std::vector<Process*> readyQueue;
+    std::vector<Process*> waitingQueue;
+    Process* cpuProcess = nullptr;
 
-        // 2. Checks ALL processes to find the one with the shortest remaining time
-        // that has arrived and is not yet finished.
-        for (int i = 0; i < n; i++) {
-            if (processes[i].getArrivalTime() <= currentTime && !processes[i].isFinished()) {
+    // 1. Sorts by arrival time initially
+    std::sort(processes.begin(), processes.end(), [](const Process& a, const Process& b) {
+        return a.getArrivalTime() < b.getArrivalTime();
+    });
 
-                // -Found a process with shorter remaining time?-
-                if (processes[i].getRemainingTime() < shortest_remaining) {
-                    shortest_remaining = processes[i].getRemainingTime();
-                    shortest_index = i;
-                }
+    // 2. Main Simulation Loop
+    while (completed != processes.size()) {
 
-                // -Tie-Breaker: If remaining times are equal, picks the one that arrived first-
-                if (processes[i].getRemainingTime() == shortest_remaining) {
-                    if (processes[i].getArrivalTime() < processes[shortest_index].getArrivalTime()) {
-                        shortest_index = i;
-                    }
+        //-Check for new arrivals-
+        for (int i = 0; i < processes.size(); i++) {
+            if (processes[i].getArrivalTime() == currentTime) {
+                processes[i].setState(STATE_READY);
+                readyQueue.push_back(&processes[i]);
+            }
+        }
+
+        //-Handle I/O (Waiting Queue)-
+        handleWaitingQueue(waitingQueue, readyQueue);
+
+        //-Preemption Logic (SRTF Specific)-
+        // If CPU is busy, check if anyone in Ready Queue is shorter
+        if (cpuProcess != nullptr) {
+            for (int i = 0; i < readyQueue.size(); i++) {
+                if (readyQueue[i]->getCurrentBurstRemaining() < cpuProcess->getCurrentBurstRemaining()) {
+
+                    // Preempt!
+                    cpuProcess->setState(STATE_READY);
+                    readyQueue.push_back(cpuProcess); // Put back in ready queue
+
+                    cpuProcess = readyQueue[i]; // Take the new shorter one
+                    readyQueue.erase(readyQueue.begin() + i);
+                    cpuProcess->setState(STATE_RUNNING);
+                    break; // Only switch once per tick
                 }
             }
         }
 
-        if (shortest_index == -1) {
-            //-No process is ready to run (CPU idle)-
-            currentTime++;
-        }
-        else {
-            // 3. Runs the chosen process for just ONE time unit
-            Process& p = processes[shortest_index];
+        //-Handle CPU Execution-
+        if (cpuProcess != nullptr) {
+            bool burstFinished = cpuProcess->runFor(1);
 
-            p.setState(STATE_RUNNING);
-            p.runFor(1);
-            currentTime++;
+            if (burstFinished) {
+                cpuProcess->moveToNextBurst();
 
-            // 4. If it finished during that last tick, records it
-            if (p.isFinished()) {
-                p.setCompletionTime(currentTime);
-                p.setState(STATE_TERMINATED);
-                completed++;
+                if (cpuProcess->isFinished()) {
+                    cpuProcess->setCompletionTime(currentTime);
+                    cpuProcess->setState(STATE_TERMINATED);
+                    completed++;
+                    cpuProcess = nullptr;
+                }
+                else {
+                    cpuProcess->setState(STATE_WAITING);
+                    waitingQueue.push_back(cpuProcess);
+                    cpuProcess = nullptr;
+                }
             }
         }
+
+        //-Scheduler Decision (If CPU is free)-
+        if (cpuProcess == nullptr && !readyQueue.empty()) {
+            int shortestIndex = -1;
+            int shortestTime = 99999;
+
+            for (int i = 0; i < readyQueue.size(); i++) {
+                if (readyQueue[i]->getCurrentBurstRemaining() < shortestTime) {
+                    shortestTime = readyQueue[i]->getCurrentBurstRemaining();
+                    shortestIndex = i;
+                }
+            }
+
+            cpuProcess = readyQueue[shortestIndex];
+            readyQueue.erase(readyQueue.begin() + shortestIndex);
+            cpuProcess->setState(STATE_RUNNING);
+        }
+
+        currentTime++;
     }
 
     printResults(processes, "Shortest Remaining Time First (SRTF)");
 }
 
-//-This method will calculates and prints the final statistics table-
-// Updated to accept the list of processes and a title (4)
+
+//-This method calculates and prints the final statistics table-
 void Scheduler::printResults(std::vector<Process>& processes, std::string algorithmName) {
     std::cout << "\n--- " << algorithmName << " ---" << std::endl;
 
     int total_turnaround_time = 0;
     int total_waiting_time = 0;
 
+    //-Prints the table header-
+    std::cout << "| PID | Arrival | Total CPU | Complete | Turnaround | Waiting |\n";
+    std::cout << "|-----|---------|-----------|----------|------------|---------|\n";
 
-    // Sort by PID for a clean, final report
+    // 1. Sort by PID for a clean report
     std::sort(processes.begin(), processes.end(), [](const Process& a, const Process& b) {
         return a.getPid() < b.getPid();
     });
 
-    // 1. Prints the table header (Make a table since more organized than a list format would look.)
-    std::cout << "| PID | Arrival | Burst | Complete | Turnaround | Waiting |\n";
-
-
-    // 2. Calculaes stats for each process and print its row
+    // 2. Loop through processes to calculate and print stats
     for (int i = 0; i < processes.size(); i++) {
-        //-Calculates stats-
         int tat = processes[i].getCompletionTime() - processes[i].getArrivalTime();
-        int wt = tat - processes[i].getBurstTime();
+        int total_cpu = processes[i].getTotalCpuDuration();
+        int wt = tat - total_cpu;
 
-        //-Stores them back into the process object-
+        // Ensure non-negative (safety check)
+        if (wt < 0) wt = 0;
+
         processes[i].setTurnaroundTime(tat);
         processes[i].setWaitingTime(wt);
 
-        //-Adds to totals-
         total_turnaround_time += tat;
         total_waiting_time += wt;
 
-        //-Prints the row-
         std::cout << "| " << std::setw(3) << processes[i].getPid()
             << " | " << std::setw(7) << processes[i].getArrivalTime()
-            << " | " << std::setw(5) << processes[i].getBurstTime()
+            << " | " << std::setw(9) << total_cpu
             << " | " << std::setw(8) << processes[i].getCompletionTime()
             << " | " << std::setw(10) << processes[i].getTurnaroundTime()
             << " | " << std::setw(7) << processes[i].getWaitingTime() << " |\n";
     }
 
-    // 3. Calculates and print the averages
+    //-Calculate and Print Averages-
     double avg_tat = (double)total_turnaround_time / processes.size();
     double avg_wt = (double)total_waiting_time / processes.size();
 
     std::cout << "\nAverage Turnaround Time: " << std::fixed << std::setprecision(2) << avg_tat << std::endl;
     std::cout << "Average Waiting Time:    " << avg_wt << std::endl;
-
+    std::cout << "---------------------------------------------------------" << std::endl;
 }
