@@ -140,20 +140,16 @@ SRTF:	Preemptive;	Checks the queue at every time tick. If a new process arrives 
 
 ## Sample Output
 
-''
+##### [MMU] Process 1: Virt: 45092 -> Phys: 8196
 
-[MMU] Process 1: Virt: 45092 -> Phys: 8196
+##### [MMU] Process 2: Virt: 12288 -> Phys: 4096
 
-[MMU] Process 2: Virt: 12288 -> Phys: 4096
+#####...
 
-...
+#####| PID | Arrival | Total CPU | Complete | Turnaround | Waiting |
 
-| PID | Arrival | Total CPU | Complete | Turnaround | Waiting |
+#####|  1  |    0    |     5     |    5     |     5      |    0    |
 
-|  1  |    0    |     5     |    5     |     5      |    0    |
+#####...
 
-...
-
-Average Waiting Time: 1.57
-
-''
+#####Average Waiting Time: 1.57
