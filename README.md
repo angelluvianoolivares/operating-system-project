@@ -98,6 +98,7 @@ g++ main.cpp auth.cpp Process.cpp Scheduler.cpp MMU.cpp -o os_sim
 ### Execution
 
 1. Run the program:
+
 ''
 
 ./os_sim
@@ -138,7 +139,9 @@ SRTF:	Preemptive;	Checks the queue at every time tick. If a new process arrives 
 - auth.h/cpp: Handles user login security.
 
 ## Sample Output
+
 ''
+
 [MMU] Process 1: Virt: 45092 -> Phys: 8196
 
 [MMU] Process 2: Virt: 12288 -> Phys: 4096
