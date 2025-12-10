@@ -24,11 +24,11 @@ Part 1: Security & Authentication
 
 - #### Algorithms Implemented:
 
-1. FCFS (First-Come, First-Served) - Non-preemptive.
+  1. FCFS (First-Come, First-Served) - Non-preemptive.
 
-2. SJF (Shortest Job First) - Non-preemptive, optimizes for throughput.
+  2. SJF (Shortest Job First) - Non-preemptive, optimizes for throughput.
 
-3. SRTF (Shortest Remaining Time First) - Preemptive version of SJF, offering the lowest average waiting time.
+  3. SRTF (Shortest Remaining Time First) - Preemptive version of SJF, offering the lowest average waiting time.
 
 ### Part 4: Virtual Memory (MMU)
 #### Hardware Simulation:
@@ -89,25 +89,17 @@ We need to compare multiple algorithms (FCFS vs. SJF) on the exact same dataset 
 ### Compilation
 To compile all components (Scheduler, Process logic, MMU, Auth) into a single executable:
 
-''
-
-g++ main.cpp auth.cpp Process.cpp Scheduler.cpp MMU.cpp -o os_sim
-
-''
+##### g++ main.cpp auth.cpp Process.cpp Scheduler.cpp MMU.cpp -o os_sim
 
 ### Execution
 
 1. Run the program:
 
-''
+##### ./os_sim
 
-./os_sim
+3. Login: Enter admin and password123.
 
-''
-
-2. Login: Enter admin and password123.
-
-3. #### Observation:
+4. #### Observation:
 
 - The system generates random processes.
 
@@ -144,12 +136,12 @@ SRTF:	Preemptive;	Checks the queue at every time tick. If a new process arrives 
 
 ##### [MMU] Process 2: Virt: 12288 -> Phys: 4096
 
-#####...
+##### ...
 
-#####| PID | Arrival | Total CPU | Complete | Turnaround | Waiting |
+##### | PID | Arrival | Total CPU | Complete | Turnaround | Waiting |
 
-#####|  1  |    0    |     5     |    5     |     5      |    0    |
+##### |  1  |    0    |     5     |    5     |     5      |    0    |
 
-#####...
+##### ...
 
-#####Average Waiting Time: 1.57
+##### Average Waiting Time: 1.57
