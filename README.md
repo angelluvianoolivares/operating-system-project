@@ -89,25 +89,26 @@ We need to compare multiple algorithms (FCFS vs. SJF) on the exact same dataset 
 ### Compilation
 To compile all components (Scheduler, Process logic, MMU, Auth) into a single executable:
 
-##### g++ main.cpp auth.cpp Process.cpp Scheduler.cpp MMU.cpp -o os_sim
+    ##### g++ main.cpp auth.cpp Process.cpp Scheduler.cpp MMU.cpp -o os_sim
+
 
 ### Execution
-
 1. Run the program:
 
-##### ./os_sim
+    ##### ./os_sim
+
 
 3. Login: Enter admin and password123.
 
-4. #### Observation:
+4. Observation:
 
-- The system generates random processes.
+  - The system generates random processes.
 
-- It runs FCFS, SJF, and SRTF sequentially.
+  - It runs FCFS, SJF, and SRTF sequentially.
 
-- You will see [MMU] logs appear during CPU bursts, showing address translations.
+  - You will see [MMU] logs appear during CPU bursts, showing address translations.
 
-- Final statistical tables will compare the performance of each algorithm.
+  - Final statistical tables will compare the performance of each algorithm.
 
 ## Algorithms Summary
 
