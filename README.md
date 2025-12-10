@@ -1,6 +1,7 @@
 # operating-system-project
 Operating System Simulator
 Group Members
+
 Rodolfo Mendoza
 
 Angel Olivares
@@ -21,7 +22,7 @@ Multi-Burst Processes: Processes are not static; they follow a realistic lifecyc
 
 Concurrent I/O: Implements a Waiting Queue. While the CPU executes one process, other processes can simultaneously decrement their I/O timers in the background.
 
-### Algorithms Implemented:
+#### Algorithms Implemented:
 
 FCFS (First-Come, First-Served) - Non-preemptive.
 
@@ -32,7 +33,7 @@ SRTF (Shortest Remaining Time First) - Preemptive version of SJF, offering the l
 ## Part 4: Virtual Memory (MMU)
 Hardware Simulation: Simulates a Memory Management Unit (MMU) that translates 32-bit Virtual Addresses to Physical Addresses.
 
-### Paging Architecture:
+#### Paging Architecture:
 
 Page Size: 4 KB (12-bit offset).
 
@@ -43,7 +44,7 @@ Page Table: A map-based structure simulating RAM frames.
 ## Design Decisions & Simulation Architecture
 This section explains the technical choices behind the simulation logic ("The Why and How").
 
-### 1. The Tick-by-Tick Architecture
+#### 1. The Tick-by-Tick Architecture
 Why: Many simulators just calculate Start Time + Burst = End Time. We chose a tick-based loop (incrementing time by 1 unit). How:
 
 Inside Scheduler.cpp, the main loop represents the system clock.
@@ -52,7 +53,7 @@ Preemption: Every tick, the scheduler checks if a new process arrived or if a sh
 
 Concurrency: By simulating time units, we can execute the CPU process and update all processes in the WaitingQueue simultaneously. This accurately simulates an OS where I/O devices work in parallel with the CPU.
 
-### 2. Integrated MMU Simulation
+#### 2. Integrated MMU Simulation
 Why: We wanted to simulate memory accesses as they happen, rather than as a separate post-calculation. How:
 
 The MMU object is embedded inside the Scheduler.
@@ -61,14 +62,14 @@ During a CPU burst, the simulator randomly generates "Load/Store" instructions (
 
 These virtual addresses are passed to mmu.translate(), which performs bitwise operations (>> and &) to extract the Page Number and Offset, simulating real hardware logic.
 
-### 3. Multi-Burst Process Structure
+#### 3. Multi-Burst Process Structure
 Why: Real processes don't just use the CPU once and die; they interact with I/O (disk, network). How:
 
 The Process class uses a std::vector<int> (e.g., {5, 2, 3}) to store a sequence of bursts.
 
 The class acts as a state machine, tracking the current_burst_index. Even indices are treated as CPU (sent to Ready Queue), and odd indices are I/O (sent to Waiting Queue).
 
-### 4. Data Integrity Strategy
+#### 4. Data Integrity Strategy
 Why: We need to compare multiple algorithms (FCFS vs. SJF) on the exact same dataset to be fair. How:
 
 The Scheduler methods accept processes by value (copies), not reference.
@@ -76,21 +77,22 @@ The Scheduler methods accept processes by value (copies), not reference.
 This allows main.cpp to generate a random master list once, and then pass fresh copies to each algorithm. The simulation can modify states (running, terminated) without "ruining" the data for the next algorithm test.
 
 ## How to Compile & Run
-Compilation
+### Compilation
 To compile all components (Scheduler, Process logic, MMU, Auth) into a single executable:
-
-Bash
-
+''
 g++ main.cpp auth.cpp Process.cpp Scheduler.cpp MMU.cpp -o os_sim
-Execution
+''
+
+### Execution
+
 Run the program:
-
-Bash
-
+''
 ./os_sim
+''
+
 Login: Enter admin and password123.
 
-Observation:
+### Observation:
 
 The system generates random processes.
 
@@ -100,15 +102,15 @@ You will see [MMU] logs appear during CPU bursts, showing address translations.
 
 Final statistical tables will compare the performance of each algorithm.
 
-Algorithms Summary
-Algorithm	Type	Description
+## Algorithms Summary
+
+#### Algorithm	Type	Description
 FCFS	Non-Preemptive	Processes execute in arrival order. Simple but suffers from the "Convoy Effect."
 SJF	Non-Preemptive	Selects the process with the shortest current CPU burst. Reduces waiting time but can starve long jobs.
 SRTF	Preemptive	Checks the queue at every time tick. If a new process arrives with a shorter remaining time, the current process is paused.
 
-Export to Sheets
 
-File Structure
+## File Structure
 main.cpp: Entry point. Generates random process datasets and triggers the scheduler.
 
 Process.h/cpp: Defines the PCB (Process Control Block), managing states, multi-burst vectors, and statistics.
@@ -119,9 +121,8 @@ MMU.h/cpp: Simulates hardware paging, including TLB lookup and Page Table mappin
 
 auth.h/cpp: Handles user login security.
 
-Sample Output
-Plaintext
-
+## Sample Output
+''
 [MMU] Process 1: Virt: 45092 -> Phys: 8196
 [MMU] Process 2: Virt: 12288 -> Phys: 4096
 ...
@@ -129,3 +130,4 @@ Plaintext
 |  1  |    0    |     5     |    5     |     5      |    0    |
 ...
 Average Waiting Time: 1.57
+''
