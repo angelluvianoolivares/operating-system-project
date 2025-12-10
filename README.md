@@ -141,7 +141,7 @@ SRTF:	Preemptive;	Checks the queue at every time tick. If a new process arrives 
 
 ##### | PID | Arrival | Total CPU | Complete | Turnaround | Waiting |
 
-##### |  1  |    0    |     5     |    5     |     5      |    0    |
+##### |  1    |    0      |     5       |    5       |     5        |    0      |
 
 ##### ...
 
