@@ -2,6 +2,7 @@
 Operating System Simulator
 Group Members
 Rodolfo Mendoza
+
 Angel Olivares
 
 ## Project Overview
